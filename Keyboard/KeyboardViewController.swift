@@ -21,12 +21,14 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        gradient.colors = [UIColor(red: 1.0, green: 0.85, blue: 0.91, alpha: 1).cgColor,
-                           UIColor(red: 0.96, green: 0.45, blue: 0.62, alpha: 1).cgColor]
+        gradient.colors = [
+            UIColor(red: 1.0, green: 0.85, blue: 0.91, alpha: 1).cgColor,
+            UIColor(red: 0.96, green: 0.45, blue: 0.62, alpha: 1).cgColor
+        ]
         view.layer.insertSublayer(gradient, at: 0)
 
         let h = view.heightAnchor.constraint(equalToConstant: 275)
-        h.priority = .init(999)
+        h.priority = UILayoutPriority(999)
         h.isActive = true
 
         root.axis = .vertical
@@ -56,7 +58,6 @@ final class KeyboardViewController: UIInputViewController {
         root.addArrangedSubview(makeRow(rows[0].map { key($0) }))
         root.addArrangedSubview(makeRow(rows[1].map { key($0) }, inset: numbers ? 0 : 14))
 
-        // Row 3: shift + letters + delete
         let shiftBtn = special(numbers ? "#+=" : (shift ? "⬆︎" : "⇧"), #selector(tapShift))
         let del = special("⌫", #selector(tapDelete))
         let letters = rows[2].map { key($0) }
@@ -67,17 +68,16 @@ final class KeyboardViewController: UIInputViewController {
         }
         root.addArrangedSubview(row3)
 
-        // Row 4: 123, globe, space, return
         let num = special(numbers ? "ABC" : "123", #selector(tapNumbers))
-        let globe = special("🌐", #selector(tapGlobe(_:event:)), onUp: false)
-        globe.addTarget(self, action: #selector(tapGlobe(_:event:)), for: .touchUpInside)
+        let globe = special("🌐", #selector(tapGlobe(_:event:)))
         let space = special("♡  love  ♡", #selector(tapSpace))
         space.setContentHuggingPriority(.defaultLow, for: .horizontal)
         let ret = special("return", #selector(tapReturn))
         num.widthAnchor.constraint(equalToConstant: 48).isActive = true
         globe.widthAnchor.constraint(equalToConstant: 44).isActive = true
         ret.widthAnchor.constraint(equalToConstant: 78).isActive = true
-        var bottom = [num, globe, space, ret]
+
+        var bottom: [UIView] = [num, globe, space, ret]
         if !needsInputModeSwitchKey { bottom.removeAll { $0 === globe } }
         root.addArrangedSubview(makeRow(bottom))
     }
@@ -89,7 +89,6 @@ final class KeyboardViewController: UIInputViewController {
         s.distribution = .fill
         s.isLayoutMarginsRelativeArrangement = true
         s.layoutMargins = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
-        // letter keys equal width
         let letterKeys = views.filter { $0.tag == 1 }
         if let first = letterKeys.first {
             letterKeys.dropFirst().forEach {
@@ -127,9 +126,9 @@ final class KeyboardViewController: UIInputViewController {
         return b
     }
 
-    private func special(_ title: String, _ sel: Selector, onUp: Bool = true) -> UIButton {
+    private func special(_ title: String, _ sel: Selector) -> UIButton {
         let b = styled(title, special: true)
-        if onUp { b.addTarget(self, action: sel, for: .touchUpInside) }
+        b.addTarget(self, action: sel, for: .touchUpInside)
         return b
     }
 
@@ -140,7 +139,7 @@ final class KeyboardViewController: UIInputViewController {
             sender.backgroundColor = UIColor(red: 1, green: 0.78, blue: 0.88, alpha: 1)
         }
         let p = sender.superview?.convert(sender.center, to: view) ?? sender.center
-        effects.burst(in: view, at: p)       // 🌹🌸 petals!
+        effects.burst(in: view, at: p)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
@@ -158,12 +157,19 @@ final class KeyboardViewController: UIInputViewController {
         textDocumentProxy.insertText(s.title(for: .normal) ?? "")
         if shift && !numbers { shift = false; build() }
     }
-    @objc private func tapShift() { numbers ? () : (shift.toggle(), build()).self }
+
+    @objc private func tapShift() {
+        guard !numbers else { return }
+        shift.toggle()
+        build()
+    }
+
     @objc private func tapDelete() { textDocumentProxy.deleteBackward() }
     @objc private func tapSpace() { textDocumentProxy.insertText(" ") }
     @objc private func tapReturn() { textDocumentProxy.insertText("\n") }
     @objc private func tapNumbers() { numbers.toggle(); build() }
+
     @objc private func tapGlobe(_ s: UIButton, event: UIEvent) {
         handleInputModeList(from: s, with: event)
     }
-} 
+}
