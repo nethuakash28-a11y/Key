@@ -1,0 +1,36 @@
+name: RomanticKeyboard
+options:
+  bundleIdPrefix: com.yourname
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  RomanticKeyboard:
+    type: application
+    platform: iOS
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Romantic Keyboard
+        UILaunchScreen: {}
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.yourname.romantickeyboard
+    dependencies:
+      - target: KeyboardExt
+  KeyboardExt:
+    type: app-extension
+    platform: iOS
+    sources: [Keyboard]
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: Romantic Keyboard
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrimaryLanguage: en-US
+            RequestsOpenAccess: false
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.yourname.romantickeyboard.keyboard 
